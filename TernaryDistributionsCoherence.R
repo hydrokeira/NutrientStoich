@@ -1,5 +1,7 @@
 require(ggtern)
 require(cetcolor)
+require(dplyr)
+require(ggplot2)
 
 #### read in and data cleaning steps - this sets up for all solutes ####
 
@@ -46,6 +48,8 @@ monthly_stoich_cluster_wide %>%
   geom_Tline(Tintercept = .20)+geom_Rline(Rintercept = .20)+geom_Lline(Lintercept = .20)+
   theme(text = element_text(size = 20))+labs(col="Month", x="DSi", y="N", z="P")
 
+#### calculate depletion states ####
+
 threshold = 0.2
 
 monthly_stoich_class<-monthly_stoich_cluster_wide %>%
@@ -88,6 +92,33 @@ annual_stoich<-monthly_stoich_cluster_wide %>%
       TRUE ~ "Balanced"
     )
   )
+
+p1<-monthly_stoich_cluster_wide %>%
+  dplyr::group_by(Stream_Name) %>%
+  dplyr::summarise(mean_DSi=mean(DSi), mean_N=mean(N), mean_P=mean(P)) %>%
+  ggtern(aes(x=mean_DSi/16, y=mean_N/16, z=mean_P))+
+  geom_point()+
+  theme_bw()+
+  geom_Tline(Tintercept = .20)+geom_Rline(Rintercept = .20)+geom_Lline(Lintercept = .20)+
+  theme(text = element_text(size = 20), legend.position = "bottom")+
+  labs(x="DSi", y="N", z="P")
+
+p1
+
+p2<-monthly_stoich_cluster_wide %>%
+  dplyr::left_join(month_clusters) %>%
+  dplyr::filter(chemical=="P") %>%
+  ggtern(aes(x=DSi/16, y=N/16, z=P, col=as.factor(Month)))+
+  geom_point()+
+  scale_color_manual(values = cet_pal(12, "c4s"))+theme_bw()+
+  geom_Tline(Tintercept = .20)+geom_Rline(Rintercept = .20)+geom_Lline(Lintercept = .20)+
+  theme(text = element_text(size = 20), legend.position = "null")+
+  labs(col="Month", x="DSi", y="N", z="P")
+
+
+p2
+
+set1<-ggarrange(p1, p2)
 
 p3<-monthly_stoich_class %>%
   dplyr::filter(chemical=="P") %>%
@@ -146,33 +177,6 @@ p4<-monthly_stoich_class %>%
 
 p4
 
-p1<-monthly_stoich_cluster_wide %>%
-  dplyr::group_by(Stream_Name) %>%
-  dplyr::summarise(mean_DSi=mean(DSi), mean_N=mean(N), mean_P=mean(P)) %>%
-  ggtern(aes(x=mean_DSi/16, y=mean_N/16, z=mean_P))+
-  geom_point()+
-  theme_bw()+
-  geom_Tline(Tintercept = .20)+geom_Rline(Rintercept = .20)+geom_Lline(Lintercept = .20)+
-  theme(text = element_text(size = 20), legend.position = "bottom")+
-  labs(x="DSi", y="N", z="P")
-
-p1
-
-p2<-monthly_stoich_cluster_wide %>%
-  dplyr::left_join(month_clusters) %>%
-  dplyr::filter(chemical=="P") %>%
-  ggtern(aes(x=DSi/16, y=N/16, z=P, col=as.factor(Month)))+
-  geom_point()+
-  scale_color_manual(values = cet_pal(12, "c4s"))+theme_bw()+
-  geom_Tline(Tintercept = .20)+geom_Rline(Rintercept = .20)+geom_Lline(Lintercept = .20)+
-  theme(text = element_text(size = 20), legend.position = "null")+
-  labs(col="Month", x="DSi", y="N", z="P")
-  
-
-p2
-
-set1<-ggarrange(p1, p2)
-
 set2<-ggarrange(p3, p4, align = "h")
 
 pdf("Annual_Monthly_Ternary_Updated01092026.pdf", width = 12.5, height = 12.5)
@@ -180,6 +184,10 @@ pdf("Annual_Monthly_Ternary_Updated01092026.pdf", width = 12.5, height = 12.5)
 ggarrange(set1, set2, nrow = 2, heights = c(0.7, 0.55))
 
 dev.off()
+
+overall_count<-monthly_stoich_class %>%
+  group_by(zone) %>%
+  tally()
 
 p5<-monthly_stoich_class %>%
   dplyr::group_by(zone, Month) %>%
@@ -189,7 +197,7 @@ p5<-monthly_stoich_class %>%
   group_by(zone) %>%
   mutate(prop_scaled = prop / max(prop, na.rm = TRUE)) %>%
   mutate(zone=factor(zone, levels=c("Si-P depleted", "N depleted", "Si depleted", "N-P depleted",
-                                    "Balanced", "Si-N depleted", "P depleted"))) %>%
+                                    "Balanced", "Si-N depleted", "P depleted"))) %>% #order by timing of largest proportion
   ggplot(aes(Month, zone, fill = prop_scaled)) +
   geom_tile() +
   scale_fill_gradient(
@@ -215,17 +223,13 @@ p6<-monthly_stoich_class %>%
 
 p6
 
+#write inidividual figures into pdf to combine in AI
+
+
 #### now divide into static vs dynamic ####
-
-overall_count<-monthly_stoich_class %>%
-  group_by(zone) %>%
-  tally()
-
 zones<-monthly_stoich_class %>%
   dplyr::group_by(Stream_Name) %>%
   dplyr::summarise(num_zones=n_distinct(zone))
-
-table(zones$num_zones)
 
 many_zones<-monthly_stoich_class %>%
   dplyr::group_by(Stream_Name) %>%
@@ -273,7 +277,7 @@ p1<-monthly_stoich_cluster_wide %>%
   dplyr::mutate(zone_class=factor(zone_class, levels=c("static", "dynamic"))) %>%
   dplyr::arrange(Stream_Name, Month) %>%
   ggtern(aes(x=DSi/16, y=N/16, z=P))+
-  geom_path(aes(group=Stream_Name), col="black", alpha=0.5)+theme_classic()+
+  geom_path(aes(group=Stream_Name), col="black", alpha=0.3)+theme_classic()+
   geom_Tline(Tintercept = .20)+geom_Rline(Rintercept = .20)+geom_Lline(Lintercept = .20)+
   theme(text = element_text(size = 20), legend.position = "null")+
   labs(col="Cluster", x="DSi", y="N", z="P")+facet_wrap(~zone_class)
@@ -301,28 +305,12 @@ p2<-monthly_stoich_class %>%
 p2
 
 month_clusters<-month_clusters %>%
-  dplyr::mutate(Cluster = case_when(
-    Cluster==1~1,
-    Cluster==4~2,
-    Cluster==2~3,
-    Cluster==3~4,
-    Cluster==5~5
-  )) %>%
-  dplyr::select(Stream_Name, chemical, Cluster) %>%
-  pivot_wider(names_from = chemical, values_from = Cluster) %>%
   dplyr::mutate(sync_class = case_when(
     DSi == N & N == P ~ "fully coherent",
     DSi == N ~ "Si-N",
     DSi == P ~ "Si-P",
     N == P ~ "N-P",
     TRUE ~ "non-coherent"
-  ),
-  sync_cluster=case_when(
-    sync_class=="fully coherent"~DSi,
-    sync_class=="Si-N"~DSi,
-    sync_class=="Si-P"~DSi,
-    sync_class=="N-P"~N,
-    sync_class=="non-coherent"~NA,
   ))
 
 p3<-month_clusters %>%
