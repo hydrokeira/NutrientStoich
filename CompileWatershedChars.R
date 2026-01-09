@@ -1,6 +1,9 @@
 #calculate KG Climate for each site, merge in land use
 require(dplyr)
 require(kgc)
+require(tidyr)
+
+setwd("/Users/keirajohnson/Box Sync/Keira_Johnson/SiSyn/NutrientRegimes")
 
 monthly_results<-read.csv("WRTDS_Outputs_Clean_01082026.csv")
 

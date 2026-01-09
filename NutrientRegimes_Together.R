@@ -132,14 +132,16 @@ all_clusters_melt <- all_clusters_melt %>%
     Cluster==5~5
   ))
 
-p1<-ggplot(all_clusters_melt, aes(variable, value, col=chemical))+
+pdf("Regimes_Updated_Jan2025.pdf", width = 12, height = 8)
+
+ggplot(all_clusters_melt, aes(variable, value, col=chemical))+
   geom_line(aes(group=unique), alpha=0.6, size=0.8)+
   facet_wrap(~Cluster)+theme_classic()+scale_color_manual(values=c("grey75", "grey35", "black"))+
   theme(text = element_text(size = 20), legend.position = "null")+
   scale_x_discrete(labels=seq(1,12,1))+
   labs(y="Normalized Concentration", x="Month", col="")
 
-p1
+dev.off()
 
 solutes_clusters_melt<-melt(solutes_clusters[2:5], id.vars = c("Stream_Name"))
 
@@ -152,11 +154,13 @@ solutes_clusters_melt <- solutes_clusters_melt %>%
     value==5~5
   ))
 
-p2<-ggplot(solutes_clusters_melt, aes(as.character(value)))+
+pdf("Regimes_BarProp_Updated_Jan2025.pdf", width = 4, height = 4)
+
+ggplot(solutes_clusters_melt, aes(as.character(value)))+
   geom_bar(stat="count", aes(fill=variable), alpha=0.8)+
   theme_classic()+scale_fill_manual(values = c("grey75", "grey35", "black"))+
   theme(text = element_text(size=20), legend.position = "top")+
   labs(x="Cluster", y="Count", fill="Solute")
 
-p2
+dev.off()
 
