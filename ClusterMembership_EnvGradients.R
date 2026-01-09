@@ -71,3 +71,33 @@ pdf("Climate_LandUse.pdf", width = 12, height = 7)
 ggarrange(k1, k3, align = "v", nrow = 2, heights = c(0.5, 0.4))
 
 dev.off()
+
+p1<-spatial_data %>%
+  mutate(impacted_class=factor(impacted_class, levels = c("less-impacted", "urban", "agricultural","agricultural & urban"))) %>%
+  ggplot(aes(y=impacted_class))+
+  geom_bar(stat = "count", fill="black")+theme_classic()+
+  scale_y_discrete(limits=rev)+
+  theme(text=element_text(size=20))+labs(y="", x="Number of Sites")
+p1
+
+p2<-spatial_data %>%
+  mutate(Name=factor(Name, levels = c("Arid",
+                                      "Semi-Arid",
+                                      "Mediterranean",
+                                      "Humid Tropical",
+                                      "Humid Subtropical",
+                                      "Humid Temperate",
+                                      "Humid Continental",
+                                      "Subarctic"))) %>%
+  ggplot(aes(y=Name))+
+  geom_bar(stat = "count", fill="black")+theme_classic()+
+  scale_y_discrete(limits=rev)+
+  theme(text=element_text(size=20))+labs(y="", x="")
+
+p2
+
+pdf("Site_Env_Distributions.pdf", width = 8, height = 6)
+
+ggarrange(p2, p1, align = "v", nrow = 2, heights = c(0.7, 0.4))
+
+dev.off()
