@@ -108,3 +108,55 @@ month_clusters_wide <- month_clusters[,c(1,2,15)] %>%
 month_clusters_wide<-month_clusters_wide[complete.cases(month_clusters_wide),]
 
 write.csv(month_clusters_wide, "AllSolutes_ClusterNumbers.csv")
+
+#### plot data for Figure 3 ####
+setwd("/Users/keirajohnson/Box Sync/Keira_Johnson/SiSyn/NutrientRegimes")
+
+solutes_clusters<-read.csv("AllSolutes_ClusterNumbers.csv")
+
+solutes_clusters_long<-solutes_clusters %>%
+  pivot_longer(cols = c(DSi, N, P), names_to = "solute", values_to = "average_cluster")
+
+all_clusters<-read.csv("ClusterStreams_allSolutes.csv")
+
+all_clusters_melt<-melt(all_clusters, id.vars=c("X", "Stream_Name", "chemical", "Cluster"))
+
+all_clusters_melt$unique<-paste(all_clusters_melt$Stream_Name, all_clusters_melt$chemical)
+
+all_clusters_melt <- all_clusters_melt %>%
+  mutate(Cluster=case_when(
+    Cluster==1~1,
+    Cluster==4~2,
+    Cluster==2~3,
+    Cluster==3~4,
+    Cluster==5~5
+  ))
+
+p1<-ggplot(all_clusters_melt, aes(variable, value, col=chemical))+
+  geom_line(aes(group=unique), alpha=0.6, size=0.8)+
+  facet_wrap(~Cluster)+theme_classic()+scale_color_manual(values=c("grey75", "grey35", "black"))+
+  theme(text = element_text(size = 20), legend.position = "null")+
+  scale_x_discrete(labels=seq(1,12,1))+
+  labs(y="Normalized Concentration", x="Month", col="")
+
+p1
+
+solutes_clusters_melt<-melt(solutes_clusters[2:5], id.vars = c("Stream_Name"))
+
+solutes_clusters_melt <- solutes_clusters_melt %>%
+  mutate(value=case_when(
+    value==1~1,
+    value==4~2,
+    value==2~3,
+    value==3~4,
+    value==5~5
+  ))
+
+p2<-ggplot(solutes_clusters_melt, aes(as.character(value)))+
+  geom_bar(stat="count", aes(fill=variable), alpha=0.8)+
+  theme_classic()+scale_fill_manual(values = c("grey75", "grey35", "black"))+
+  theme(text = element_text(size=20), legend.position = "top")+
+  labs(x="Cluster", y="Count", fill="Solute")
+
+p2
+
