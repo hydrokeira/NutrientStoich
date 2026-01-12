@@ -223,7 +223,29 @@ p6<-monthly_stoich_class %>%
 
 p6
 
+monthly_stoich_class %>%
+  dplyr::filter(chemical=="P") %>%
+  group_by(zone) %>%
+  tally()
+
 #write inidividual figures into pdf to combine in AI
+pdf("Ternary_Monthly_Updated01112026.pdf", width = 8, height = 6.5)
+
+p2
+
+dev.off()
+
+pdf("Ternary_Monthly_BarplotDist_Updated01112026.pdf", width = 5, height = 6.5)
+
+p6
+
+dev.off()
+
+pdf("Ternary_Monthly_ProportionBarplot_Updated01112026.pdf", width = 13, height = 6)
+
+p5
+
+dev.off()
 
 
 #### now divide into static vs dynamic ####
@@ -268,7 +290,9 @@ month_clusters<-month_clusters %>%
     sync_class=="non-coherent"~NA,
   ))
 
-p1<-monthly_stoich_cluster_wide %>%
+pdf("Dynamic_Static_Ternary.pdf", width = 16, height = 6.5)
+
+monthly_stoich_cluster_wide %>%
   left_join(zones) %>%
   dplyr::mutate(zone_class=case_when(
     num_zones==1~"static",
@@ -277,14 +301,16 @@ p1<-monthly_stoich_cluster_wide %>%
   dplyr::mutate(zone_class=factor(zone_class, levels=c("static", "dynamic"))) %>%
   dplyr::arrange(Stream_Name, Month) %>%
   ggtern(aes(x=DSi/16, y=N/16, z=P))+
-  geom_path(aes(group=Stream_Name), col="black", alpha=0.3)+theme_classic()+
+  geom_path(aes(group=Stream_Name), col="black", alpha=0.3)+theme_bw()+
   geom_Tline(Tintercept = .20)+geom_Rline(Rintercept = .20)+geom_Lline(Lintercept = .20)+
   theme(text = element_text(size = 20), legend.position = "null")+
   labs(col="Cluster", x="DSi", y="N", z="P")+facet_wrap(~zone_class)
 
-p1
+dev.off()
 
-p2<-monthly_stoich_class %>%
+pdf("Dynamic_Static_Barplot.pdf", width = 8, height = 5)
+
+monthly_stoich_class %>%
   dplyr::filter(chemical=="P") %>%
   dplyr::left_join(zones) %>%
   dplyr::mutate(zone=factor(zone, levels=c("Balanced", "N depleted", "P depleted", "Si depleted",
@@ -297,12 +323,12 @@ p2<-monthly_stoich_class %>%
   ggplot(aes(y=zone, fill=zone_class))+
   geom_bar(position = "dodge", col="black")+
   theme_classic()+
-  theme(text = element_text(size = 20), legend.position = "right")+
+  theme(text = element_text(size = 20), legend.position = "bottom")+
   scale_fill_manual(values = c("black", "white"))+scale_y_discrete(limits=rev)+
   labs(y="", x="Number of Site-Month Observations", fill="")+
   guides(fill = guide_legend(reverse=T))
 
-p2
+dev.off()
 
 month_clusters<-month_clusters %>%
   dplyr::mutate(sync_class = case_when(
@@ -313,7 +339,9 @@ month_clusters<-month_clusters %>%
     TRUE ~ "non-coherent"
   ))
 
-p3<-month_clusters %>%
+pdf("Dynamic_Static_Coherence.pdf", width = 8, height = 5)
+
+month_clusters %>%
   dplyr::left_join(zones) %>%
   dplyr::mutate(zone_class=case_when(
     num_zones == 1~"static",
@@ -324,16 +352,22 @@ p3<-month_clusters %>%
   scale_fill_manual(values = c("grey70", "dodgerblue", "dodgerblue3", "dodgerblue4", "black"), na.value = "grey")+
   theme_classic()+
   theme(text = element_text(size = 20),
-        axis.ticks.y = element_blank())+
-  labs(y="", x="Proportion of Sites", fill="Coherence")+
+        axis.ticks.y = element_blank(), legend.position = "bottom")+
+  labs(y="", x="Proportion of Sites", fill="")+
   guides(fill = guide_legend(reverse=T))
 
-p3
-
-bottom_set<-ggarrange(p2, p3, heights = c(0.4, 0.3), align = "v", nrow = 2)
-
-pdf("Dynamic_Static_DepletionState.pdf", width = 10, height = 12)
-
-ggarrange(p1, bottom_set, nrow=2, heights = c(0.5, 0.6))
-
 dev.off()
+
+(table(zones$num_zones)/327)*100
+
+(table(many_zones$num_zones)/135)*100
+
+stat_dyn_coherece<-month_clusters %>%
+  dplyr::left_join(zones) %>%
+  dplyr::mutate(zone_class=case_when(
+    num_zones == 1~"static",
+    num_zones > 1~"dynamic"
+  )) %>%
+  filter(zone_class=="static")
+
+table(stat_dyn_coherece$sync_class)/192

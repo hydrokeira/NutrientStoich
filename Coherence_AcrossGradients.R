@@ -31,6 +31,8 @@ month_clusters<-month_clusters %>%
   ))
 
 
+(table(month_clusters$sync_class)/327)*100
+
 p1<-month_clusters %>%
   mutate(sync_class=factor(sync_class, levels=c("non-coherent", "N-P", "Si-P", "Si-N", "fully coherent"))) %>%
   ggplot(aes(y=1))+geom_bar(aes(fill=sync_class), position = "fill")+
@@ -76,3 +78,8 @@ pdf("Coherence_Cluster_LULC_Updated01092026.pdf", width = 10, height = 8)
 ggarrange(p1, p2, p3, nrow = 3, align = "v")
 
 dev.off()
+
+month_clusters %>%
+  left_join(spatial_data[,c(3,9)]) %>%
+  group_by(sync_class, impacted_class) %>%
+  tally()
