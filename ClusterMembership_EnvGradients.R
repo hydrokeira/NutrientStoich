@@ -40,7 +40,8 @@ sync_true <- sync_true %>%
   ))
 
 k1<-sync_true %>%
-  mutate(sync_cluster=factor(value, levels=c(5,4,3,2,1))) %>%
+  mutate(value=factor(value, levels=c(5,4,3,2,1))) %>%
+  mutate(variable=factor(variable, levels=c("N", "DSi", "P"))) %>%
   ggplot(aes(y=Name, fill=as.factor(value)))+geom_bar(position="fill")+theme_classic()+
   labs(x="", y="")+
   theme(text=element_text(size=20),
@@ -54,6 +55,7 @@ k1
 
 k3<-sync_true %>%
   mutate(value=factor(value, levels=c(5,4,3,2,1))) %>%
+  mutate(variable=factor(variable, levels=c("N", "DSi", "P"))) %>%
   ggplot(aes(y=impacted_class, fill=as.factor(value)))+geom_bar(position="fill")+theme_classic()+
   labs(y="", x="Proportion", fill="Cluster")+
   theme(text=element_text(size=20), legend.position = "bottom")+
