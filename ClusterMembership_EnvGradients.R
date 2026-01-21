@@ -94,12 +94,12 @@ p2<-spatial_data %>%
   ggplot(aes(y=Name))+
   geom_bar(stat = "count", fill="black")+theme_classic()+
   scale_y_discrete(limits=rev)+
-  theme(text=element_text(size=20))+labs(y="", x="")
+  theme(text=element_text(size=20))+labs(y="", x="Number of Sites")
 
 p2
 
-pdf("Site_Env_Distributions.pdf", width = 8, height = 6)
+pdf("Site_Env_Distributions.pdf", width = 11.5, height = 4)
 
-ggarrange(p2, p1, align = "v", nrow = 2, heights = c(0.7, 0.4))
+ggarrange(p2, p1, align = "h", nrow = 1)
 
 dev.off()

@@ -152,15 +152,17 @@ solutes_clusters_melt <- solutes_clusters_melt %>%
     value==2~3,
     value==3~4,
     value==5~5
-  ))
+  )) %>%
+  mutate(variable=factor(variable, levels=c("P", "DSi", "N")))
 
 pdf("Regimes_BarProp_Updated_Jan2025.pdf", width = 4, height = 4)
 
 ggplot(solutes_clusters_melt, aes(as.character(value)))+
   geom_bar(stat="count", aes(fill=variable), alpha=0.8)+
-  theme_classic()+scale_fill_manual(values = c("grey75", "grey35", "black"))+
+  theme_classic()+scale_fill_manual(values = c("black","grey75", "grey35"))+
   theme(text = element_text(size=20), legend.position = "top")+
-  labs(x="Cluster", y="Count", fill="Solute")
+  labs(x="Cluster", y="Count", fill="Solute")+
+  guides(fill = guide_legend(reverse=T))
 
 dev.off()
 
