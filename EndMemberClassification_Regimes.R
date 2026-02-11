@@ -4,7 +4,7 @@ require(tidyr)
 require(tidytext)
 require(ggplot2)
 
-setwd("/Users/keirajohnson/Box Sync/Keira_Johnson/SiSyn/NutrientRegimes")
+setwd("/Users/keirajohnson/Library/CloudStorage/Box-Box/Keira_Johnson/SiSyn/NutrientRegimes")
 
 #read in monthly results
 monthly_results<-read.csv("WRTDS_Outputs_Clean_01082026.csv")
@@ -18,6 +18,13 @@ month_clusters<-month_clusters %>%
     Cluster==2~3,
     Cluster==3~4,
     Cluster==5~5
+  )) %>%
+  dplyr::mutate(Cluster = case_when(
+    Cluster==1~"ESp",
+    Cluster==2~"Sp",
+    Cluster==3~"Su",
+    Cluster==4~"Fa",
+    Cluster==5~"A"
   )) %>%
   dplyr::select(Stream_Name, chemical, Cluster) %>%
   pivot_wider(names_from = chemical, values_from = Cluster) %>%
@@ -100,24 +107,58 @@ regime_sets_panels_count<-monthly_stoich_class %>%
     dplyr::group_by(scenario) %>%
     arrange(-n) %>%
     mutate(num_sites=sum(n), prop=cumsum(n)/num_sites) %>%
-    dplyr::group_by(scenario) %>%
-    dplyr::slice_max(order_by = n, n = 10, with_ties = FALSE)
+    dplyr::group_by(scenario)
 
-pdf("Panels_Sets_LULC_Distributions.pdf", width = 8.5, height = 4)
+c25 <- c(
+  "dodgerblue2", "#E31A1C", # red
+  "green4",
+  "#6A3D9A", # purple
+  "#FF7F00", # orange
+  "black", "gold1",
+  "skyblue2", "#FB9A99", # lt pink
+  "palegreen2",
+  "#CAB2D6", # lt purple
+  "#FDBF6F", # lt orange
+  "gray70", "khaki2",
+  "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
+  "darkturquoise", "green1", "yellow4", "yellow3",
+  "darkorange4", "brown"
+)
 
-regime_sets_panels %>%
-    left_join(spatial_data[c(2,3)]) %>%
-    mutate(impacted_class=factor(impacted_class, levels=c("less-impacted", "urban", "agricultural", "agricultural & urban"))) %>%
+
+
+p2<-regime_sets_panels %>%
+    left_join(spatial_data[,c(2,3)]) %>%
     left_join(regime_sets_panels_count) %>%
     filter(!is.na(n)) %>%
     filter(scenario %in% c("panel_a", "panel_c")) %>%
     mutate(regime_set = reorder_within(regime_set, -n, scenario)) %>%
-    ggplot(aes(regime_set, fill=LTER))+geom_bar(stat = "count")+
-    facet_wrap(~scenario, scales = "free_x", nrow = 2)+theme_classic()+
+    ggplot(aes(regime_set, fill=LTER))+geom_bar(stat = "count",col="black")+
+    facet_wrap(~scenario, scales = "free_x", space="free_x")+theme_classic()+
     scale_x_reordered() +
-    #scale_fill_manual(values = c("palegreen4", "tan", "goldenrod", "darkorange3"))+
-    theme(text = element_text(size = 20))+
-    labs(y="Number of Sites", x="Regime Set (N - Si - P)")
+    theme(text = element_text(size = 20), axis.text.x = element_text(size = 15, angle = 90, vjust=0.5),
+          legend.position = "null")+
+    labs(y="Number of Sites", x="Regime Set (N - Si - P)", fill="Observation Network")+
+    scale_fill_manual(values = c25)
+
+p1<-regime_sets_panels %>%
+  left_join(spatial_data[,c(3,9)]) %>%
+  mutate(impacted_class=factor(impacted_class, levels=c("less-impacted", "urban", "agricultural", "agricultural & urban"))) %>%
+  left_join(regime_sets_panels_count) %>%
+  filter(!is.na(n)) %>%
+  filter(scenario %in% c("panel_a", "panel_c")) %>%
+  mutate(regime_set = reorder_within(regime_set, -n, scenario)) %>%
+  ggplot(aes(regime_set, fill=impacted_class))+geom_bar(stat = "count",col="black")+
+  facet_wrap(~scenario, scales = "free_x", space="free_x")+theme_classic()+
+  scale_x_reordered() +
+  theme(text = element_text(size = 20), axis.text.x = element_blank(),
+        legend.position = "null")+
+  labs(y="Number of Sites", x="", fill="Observation Network")+
+  scale_fill_manual(values = c("palegreen4", "tan", "goldenrod", "darkorange3"))
+
+pdf("Panels_Sets_LULC_LTER_Distributions.pdf", width = 16, height = 10)
+
+ggarrange(p1, p2, align = "v", nrow = 2, heights = c(0.45, 0.7))
 
 dev.off()
 
@@ -130,6 +171,20 @@ unique(monthly_stoich_class_fig10$Stream_Name)
 monthly_stoich_class_fig10 <- monthly_stoich_class %>%
   filter(scenario == "panel_a" & regime_set %in% c("3 - 3 - 3", "3 - 3 - 2", "5 - 2 - 1") |
            scenario == "panel_c" & regime_set %in% c("3 - 2 - 1", "3 - 2 - 5", "5 - 2 - 1"))
+
+monthly_stoich_class_fig10 %>%
+  left_join(spatial_data[,c(3,9)]) %>%
+  mutate(impacted_class=factor(impacted_class, levels=c("less-impacted", "urban", "agricultural", "agricultural & urban"))) %>%
+  left_join(regime_sets_panels_count) %>%
+  filter(!is.na(n)) %>%
+  filter(scenario %in% c("panel_a", "panel_c")) %>%
+  mutate(regime_set = reorder_within(regime_set, -n, scenario)) %>%
+  ggplot(aes(regime_set, fill=impacted_class))+geom_bar(stat = "count")+
+  facet_wrap(~scenario, scales = "free_x", nrow = 2)+theme_classic()+
+  scale_x_reordered() +
+  scale_fill_manual(values = c("palegreen4", "tan", "goldenrod", "darkorange3"))+
+  theme(text = element_text(size = 20))+
+  labs(y="Number of Sites", x="Regime Set (N - Si - P)")
 
 monthly_results_norm <- monthly_results %>%
   dplyr::group_by(Stream_Name, chemical) %>%
