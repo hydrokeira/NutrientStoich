@@ -6,7 +6,7 @@ require(ggplot2)
 #### read in and data cleaning steps - this sets up for all solutes ####
 
 #set wd
-setwd("/Users/keirajohnson/Box Sync/Keira_Johnson/SiSyn/NutrientRegimes")
+setwd("/Users/keirajohnson/Library/CloudStorage/Box-Box/Keira_Johnson/SiSyn/NutrientRegimes")
 
 monthly_results<-read.csv("WRTDS_Outputs_Clean_01082026.csv")
 
@@ -32,6 +32,8 @@ monthly_stoich_cluster_wide<-monthly_results %>%
   select(Stream_Name, chemical, FNConc_uM, Month) %>%
   pivot_wider(names_from = chemical, values_from = FNConc_uM, values_fn = function(x) mean(x, na.rm = T))  %>%
   left_join(month_clusters[,c(2,3,16)])
+
+save(monthly_stoich_cluster_wide, file="TernaryPlotInputData.RData")
 
 ####plot example of one stream - Mississippi river, colored by Month
 monthly_stoich_cluster_wide %>%

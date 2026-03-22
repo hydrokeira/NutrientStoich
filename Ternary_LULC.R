@@ -1,5 +1,8 @@
 #set wd
-setwd("/Users/keirajohnson/Box Sync/Keira_Johnson/SiSyn/NutrientRegimes")
+require(dplyr)
+require(tidyr)
+
+setwd("/Users/keirajohnson/Library/CloudStorage/Box-Box/Keira_Johnson/SiSyn/NutrientRegimes")
 
 monthly_results<-read.csv("WRTDS_Outputs_Clean_01082026.csv")
 
@@ -153,3 +156,11 @@ monthly_stoich_cluster_wide %>%
   filter(zone_class=="dynamic") %>%
   group_by(sync_class) %>%
   tally()
+
+monthly_stoich_class %>%
+  left_join(zones) %>%
+  mutate(zone_class=case_when(
+    num_zones == 1~"static",
+    num_zones > 1~"dynamic"
+  )) %>%
+  filter(zone_class=="static" & zone=="Si depleted")

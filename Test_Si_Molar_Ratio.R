@@ -2,6 +2,7 @@ require(ggtern)
 require(cetcolor)
 require(dplyr)
 require(ggplot2)
+require(ggalluvial)
 
 #### read in and data cleaning steps - this sets up for all solutes ####
 
@@ -185,14 +186,15 @@ zone_wide <- Si_molar_test %>%
               values_from = zone,
               names_prefix = "Si_")
 
-transitions_changed <- zone_wide %>%
-  filter(Si_16 != Si_20)
-
-trans_16_20 <- transitions_changed %>%
-  count(Si_16, Si_20, name = "Freq")
+trans_16_20 <- zone_wide %>%
+  count(Si_16, Si_20, name = "Freq")%>%
+  mutate(change_class=case_when(
+    Si_16==Si_20~"same",
+    .default = "change"
+  ))
 
 p1<-ggplot(trans_16_20,
-       aes(axis1 = Si_16, axis2 = Si_20, y = Freq)) +
+       aes(axis1 = Si_16, axis2 = Si_20, y = Freq, fill=change_class)) +
   geom_alluvium(width = 1/4) +
   geom_stratum(width = 1/4, fill = "grey90", color = "black") +
   geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
@@ -201,17 +203,20 @@ p1<-ggplot(trans_16_20,
   labs(x = "Si Molar Ratio",
        y = "Number of Observations") +
   theme_classic() +
-  theme(text = element_text(size = 18))+
-  scale_y_continuous(limits = c(0,1500))
+  theme(text = element_text(size = 18),legend.position = "null")+
+  scale_fill_manual(values = c("same"="grey", "change"="skyblue"))
 
-transitions_changed <- zone_wide %>%
-  filter(Si_16 != Si_40)
+p1
 
-trans_16_40 <- transitions_changed %>%
-  count(Si_16, Si_40, name = "Freq")
+trans_16_40 <- zone_wide %>%
+  count(Si_16, Si_40, name = "Freq") %>%
+  mutate(change_class=case_when(
+    Si_16==Si_40~"same",
+    .default = "change"
+  ))
 
 p2<-ggplot(trans_16_40,
-       aes(axis1 = Si_16, axis2 = Si_40, y = Freq)) +
+       aes(axis1 = Si_16, axis2 = Si_40, y = Freq, fill=change_class)) +
   geom_alluvium(width = 1/4) +
   geom_stratum(width = 1/4, fill = "grey90", color = "black") +
   geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
@@ -220,8 +225,8 @@ p2<-ggplot(trans_16_40,
   labs(x = "Si Molar Ratio",
        y = "Number of Observations") +
   theme_classic() +
-  theme(text = element_text(size = 18))+
-  scale_y_continuous(limits = c(0,1500))
+  theme(text = element_text(size = 18), legend.position = "null")+
+  scale_fill_manual(values = c("same"="grey", "change"="skyblue"))
 
 p2
 
