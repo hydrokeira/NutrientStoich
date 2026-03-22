@@ -8,3 +8,10 @@ This file reads in WRTDS output, applies filtering to only include streams with 
 
 Step 2: “NutrientRegimes_Together.R”
 This file clusters nutrient time series into regimes.
+
+Step 3: "ClusterMembership_EnvGradients."
+This file creates input environmental data for analysis.
+
+Remaining files make figures in the manuscript.
+
+Cleaned input data files are stored in the Data folder.
